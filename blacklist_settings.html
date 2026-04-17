@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>刊登黑名单设置</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            padding: 24px;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 24px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* 搜索区域 */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .search-item {
+            display: flex;
+            align-items: center;
+            margin-right: 24px;
+        }
+
+        .search-item label {
+            margin-right: 8px;
+            color: #606266;
+            font-size: 14px;
+        }
+
+        .input-with-icon {
+            display: flex;
+            align-items: center;
+        }
+
+        .input-with-icon input {
+            height: 32px;
+            padding: 0 10px;
+            border: 1px solid #dcdfe6;
+            border-right: none;
+            border-radius: 4px 0 0 4px;
+            outline: none;
+            width: 200px;
+        }
+        
+        .input-with-icon input:focus {
+            border-color: #409eff;
+        }
+
+        .icon-btn {
+            height: 32px;
+            width: 32px;
+            border: 1px solid #dcdfe6;
+            background-color: #f5f7fa;
+            border-radius: 0 4px 4px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #909399;
+            cursor: pointer;
+        }
+
+        .btn {
+            height: 32px;
+            padding: 0 15px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            outline: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background-color: #1890ff;
+            color: #fff;
+        }
+        .btn-primary:hover { background-color: #40a9ff; }
+
+        .btn-default {
+            background-color: #fff;
+            border-color: #dcdfe6;
+            color: #606266;
+        }
+        .btn-default:hover { border-color: #409eff; color: #409eff; }
+
+        .btn-danger-solid {
+            background-color: #d9001b;
+            color: #fff;
+        }
+        .btn-danger-solid:hover { background-color: #ff4d4f; }
+
+        .search-btns .btn {
+            margin-right: 12px;
+        }
+
+        /* 操作按钮区域 */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .action-left .btn, .action-right .btn {
+            margin-right: 12px;
+            height: 36px;
+            padding: 0 20px;
+        }
+        
+        .action-right .btn {
+            margin-right: 0;
+            margin-left: 12px;
+        }
+
+        .btn-disabled {
+            background-color: #f5f7fa;
+            border-color: #e4e7ed;
+            color: #c0c4cc;
+            cursor: not-allowed;
+        }
+        .btn-disabled:hover {
+            border-color: #e4e7ed;
+            color: #c0c4cc;
+        }
+
+        /* 表格区域 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 14px;
+            color: #606266;
+            border: 1px solid #ebeef5;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            border: 1px solid #ebeef5;
+        }
+
+        th {
+            background-color: #f5f7fa;
+            color: #333;
+            font-weight: bold;
+        }
+
+        td {
+            background-color: #fff;
+        }
+
+        .text-danger {
+            color: #f56c6c;
+            cursor: pointer;
+        }
+        .text-danger:hover {
+            color: #f78989;
+        }
+
+        /* 分页区域 */
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            font-size: 14px;
+            color: #606266;
+        }
+
+        .pagination .page-info {
+            margin-right: 16px;
+        }
+
+        .page-btn {
+            min-width: 32px;
+            height: 32px;
+            padding: 0 4px;
+            margin: 0 4px;
+            background-color: #f4f4f5;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #606266;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover:not(.btn-disabled):not(.active) {
+            color: #409eff;
+        }
+
+        .page-btn.active {
+            background-color: #409eff;
+            color: #fff;
+            cursor: default;
+        }
+
+        .page-btn.btn-disabled {
+            color: #c0c4cc;
+            cursor: not-allowed;
+            background-color: #f4f4f5;
+        }
+
+        .page-jump {
+            margin-left: 16px;
+        }
+
+        .page-jump input {
+            width: 40px;
+            height: 32px;
+            text-align: center;
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+            margin: 0 8px;
+            outline: none;
+        }
+
+        .page-jump input:focus {
+            border-color: #409eff;
+        }
+
+        /* 模态框 (弹窗) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background-color: #fff;
+            border-radius: 4px;
+            width: 500px;
+            box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #ebeef5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #303133;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            color: #909399;
+            font-size: 18px;
+        }
+
+        .modal-body {
+            padding: 30px 20px;
+        }
+
+        .form-item {
+            display: flex;
+            margin-bottom: 22px;
+            align-items: flex-start;
+        }
+
+        .form-item label {
+            width: 80px;
+            text-align: right;
+            padding-right: 12px;
+            line-height: 32px;
+            font-size: 14px;
+            color: #606266;
+        }
+
+        .form-item label.required::before {
+            content: '*';
+            color: #f56c6c;
+            margin-right: 4px;
+        }
+
+        .form-content {
+            flex: 1;
+            position: relative;
+        }
+
+        .form-content input[type="text"],
+        .form-content textarea {
+            width: 100%;
+            padding: 5px 10px;
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-content input[type="text"] {
+            height: 32px;
+        }
+
+        .form-content textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-content input:focus,
+        .form-content textarea:focus {
+            border-color: #409eff;
+        }
+
+        .char-count {
+            position: absolute;
+            bottom: -20px;
+            right: 0;
+            font-size: 12px;
+            color: #909399;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            text-align: right;
+            border-top: 1px solid #ebeef5;
+        }
+
+        .modal-footer .btn {
+            margin-left: 10px;
+        }
+
+        /* 上传组件样式 */
+        .upload-area {
+            border: 1px dashed #dcdfe6;
+            border-radius: 4px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            background-color: #fafafa;
+        }
+        .upload-area:hover {
+            border-color: #409eff;
+        }
+        .upload-tip {
+            font-size: 12px;
+            color: #909399;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- 搜索区域 -->
+    <div class="search-bar">
+        <div class="search-item">
+            <label>SKU：</label>
+            <div class="input-with-icon">
+                <input type="text" placeholder="" id="searchSku">
+                <div class="icon-btn">
+                    <svg viewBox="0 0 1024 1024" width="14" height="14" fill="currentColor">
+                        <path d="M112 112h800v160H112V112z m0 320h800v160H112v-160z m0 320h800v160H112v-160z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <div class="search-btns">
+            <button class="btn btn-primary" onclick="searchData()">搜 索</button>
+            <button class="btn btn-default" onclick="resetSearch()">重 置</button>
+        </div>
+    </div>
+
+    <!-- 操作按钮区域 -->
+    <div class="action-bar">
+        <div class="action-left">
+            <button class="btn btn-default btn-disabled" id="batchDeleteBtn">批量删除</button>
+            <button class="btn btn-default" onclick="openImportModal()">导 入</button>
+        </div>
+        <div class="action-right">
+            <button class="btn btn-danger-solid" onclick="openAddModal()">新 增</button>
+        </div>
+    </div>
+
+    <!-- 表格区域 -->
+    <table>
+        <thead>
+            <tr>
+                <th width="50"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
+                <th>SKU</th>
+                <th>过滤原因</th>
+                <th>添加人</th>
+                <th>添加时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- 数据行将通过JS动态生成，这里模拟默认数据 -->
+            <tr>
+                <td><input type="checkbox" class="row-checkbox" onchange="updateBatchDeleteBtn()"></td>
+                <td>B012345</td>
+                <td>尺寸超标</td>
+                <td>张三</td>
+                <td>2025-08-19</td>
+                <td><span class="text-danger" onclick="deleteRow(this)">删除</span></td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" class="row-checkbox" onchange="updateBatchDeleteBtn()"></td>
+                <td>B012345</td>
+                <td>尺寸超标</td>
+                <td>张三</td>
+                <td>2025-08-19</td>
+                <td><span class="text-danger" onclick="deleteRow(this)">删除</span></td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" class="row-checkbox" onchange="updateBatchDeleteBtn()"></td>
+                <td>B012345</td>
+                <td>尺寸超标</td>
+                <td>张三</td>
+                <td>2025-08-19</td>
+                <td><span class="text-danger" onclick="deleteRow(this)">删除</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- 分页区域 -->
+    <div class="pagination">
+        <span class="page-info">共 35 条</span>
+        <button class="page-btn btn-disabled" onclick="changePage('prev')">&lt;</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">3</button>
+        <button class="page-btn">4</button>
+        <button class="page-btn" onclick="changePage('next')">&gt;</button>
+        <span class="page-jump">前往 <input type="text" value="1"> 页</span>
+    </div>
+</div>
+
+<!-- 新增弹窗 -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">新增黑名单</div>
+            <div class="modal-close" onclick="closeAddModal()">&times;</div>
+        </div>
+        <div class="modal-body">
+            <div class="form-item">
+                <label class="required">SKU</label>
+                <div class="form-content">
+                    <textarea id="addSku" placeholder="请输入SKU，多个SKU请使用回车换行分隔" style="min-height: 120px;"></textarea>
+                </div>
+            </div>
+            <div class="form-item">
+                <label class="required">过滤原因</label>
+                <div class="form-content">
+                    <textarea id="addReason" placeholder="请输入过滤原因（限制100个中文字符以内）" oninput="checkReasonLength(this)"></textarea>
+                    <div class="char-count" id="reasonCharCount">0/100</div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" onclick="closeAddModal()">取 消</button>
+            <button class="btn btn-primary" onclick="confirmAdd()">确 定</button>
+        </div>
+    </div>
+</div>
+
+<!-- 导入弹窗 -->
+<div class="modal-overlay" id="importModal">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">导入黑名单</div>
+            <div class="modal-close" onclick="closeImportModal()">&times;</div>
+        </div>
+        <div class="modal-body">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div style="font-size: 40px; color: #c0c4cc; margin-bottom: 10px;">+</div>
+                <div>点击或拖拽文件到此处上传</div>
+                <div class="upload-tip">支持 .xls, .xlsx 格式文件。需包含列：SKU、过滤原因</div>
+                <input type="file" id="fileInput" style="display: none;" accept=".xls,.xlsx">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-default" onclick="closeImportModal()">取 消</button>
+            <button class="btn btn-primary" onclick="confirmImport()">导 入</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 交互逻辑 ---
+
+    // 搜索
+    function searchData() {
+        const sku = document.getElementById('searchSku').value;
+        alert('执行查询，查询SKU：' + sku);
+        // 这里应调用后端接口刷新表格
+    }
+
+    // 重置
+    function resetSearch() {
+        document.getElementById('searchSku').value = '';
+        alert('重置查询条件');
+        // 刷新表格恢复默认
+    }
+
+    // 表格全选
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll').checked;
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = selectAll;
+        });
+        updateBatchDeleteBtn();
+    }
+
+    // 更新批量删除按钮状态
+    function updateBatchDeleteBtn() {
+        const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+        const batchBtn = document.getElementById('batchDeleteBtn');
+        if (checkedCount > 0) {
+            batchBtn.classList.remove('btn-disabled');
+            batchBtn.onclick = batchDelete;
+        } else {
+            batchBtn.classList.add('btn-disabled');
+            batchBtn.onclick = null;
+        }
+    }
+
+    // 删除单行
+    function deleteRow(element) {
+        if(confirm('确认删除该记录吗？')) {
+            const tr = element.closest('tr');
+            tr.remove();
+            // 如果所有行都被删除了，取消全选按钮
+            if(document.querySelectorAll('.row-checkbox').length === 0) {
+                document.getElementById('selectAll').checked = false;
+            }
+            updateBatchDeleteBtn();
+        }
+    }
+
+    // 批量删除
+    function batchDelete() {
+        const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+        if (checkedBoxes.length === 0) return;
+        
+        if(confirm(`确认删除选中的 ${checkedBoxes.length} 条记录吗？`)) {
+            checkedBoxes.forEach(cb => {
+                cb.closest('tr').remove();
+            });
+            document.getElementById('selectAll').checked = false;
+            updateBatchDeleteBtn();
+        }
+    }
+
+    // 翻页交互（模拟）
+    function changePage(action) {
+        alert('点击了翻页按钮：' + action);
+    }
+
+    // --- 新增弹窗逻辑 ---
+    function openAddModal() {
+        document.getElementById('addSku').value = '';
+        document.getElementById('addReason').value = '';
+        document.getElementById('reasonCharCount').innerText = '0/100';
+        document.getElementById('addModal').style.display = 'flex';
+    }
+
+    function closeAddModal() {
+        document.getElementById('addModal').style.display = 'none';
+    }
+
+    function checkReasonLength(element) {
+        const maxLength = 100;
+        let val = element.value;
+        if (val.length > maxLength) {
+            val = val.substring(0, maxLength);
+            element.value = val;
+        }
+        document.getElementById('reasonCharCount').innerText = `${val.length}/${maxLength}`;
+    }
+
+    function confirmAdd() {
+        const skuText = document.getElementById('addSku').value.trim();
+        const reason = document.getElementById('addReason').value.trim();
+
+        if (!skuText) {
+            alert('请输入SKU！');
+            return;
+        }
+        if (!reason) {
+            alert('请输入过滤原因！');
+            return;
+        }
+        if (reason.length > 100) {
+            alert('过滤原因不能超过100个字符！');
+            return;
+        }
+
+        // 解析换行符，拆分为多个 SKU，并过滤掉空行
+        const skus = skuText.split('\\n').map(s => s.trim()).filter(s => s !== '');
+        
+        if (skus.length === 0) {
+            alert('请输入有效的SKU！');
+            return;
+        }
+
+        // 模拟提交数据
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        
+        let newRowsHtml = '';
+        skus.forEach(sku => {
+            newRowsHtml += `
+                <tr>
+                    <td><input type="checkbox" class="row-checkbox" onchange="updateBatchDeleteBtn()"></td>
+                    <td>${sku}</td>
+                    <td>${reason}</td>
+                    <td>当前用户</td>
+                    <td>${dateStr}</td>
+                    <td><span class="text-danger" onclick="deleteRow(this)">删除</span></td>
+                </tr>
+            `;
+        });
+        
+        document.getElementById('tableBody').insertAdjacentHTML('afterbegin', newRowsHtml);
+        alert(`成功新增 ${skus.length} 条记录！`);
+        closeAddModal();
+    }
+
+    // --- 导入弹窗逻辑 ---
+    function openImportModal() {
+        document.getElementById('fileInput').value = ''; // 清空选择的文件
+        document.getElementById('importModal').style.display = 'flex';
+    }
+
+    function closeImportModal() {
+        document.getElementById('importModal').style.display = 'none';
+    }
+
+    function confirmImport() {
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput.files.length === 0) {
+            alert('请先选择要导入的文件！');
+            return;
+        }
+        
+        alert(`开始导入文件：${fileInput.files[0].name}\n(处理包含SKU、过滤原因的数据)`);
+        closeImportModal();
+    }
+
+    // 监听文件选择改变
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        if(e.target.files.length > 0) {
+            alert(`已选择文件：${e.target.files[0].name}，点击“导入”开始处理`);
+        }
+    });
+
+</script>
+</body>
+</html>
