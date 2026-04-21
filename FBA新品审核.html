@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>亚马逊FBA选品池 - Element Plus</title>
+  <!-- 引入 Element Plus CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+  <!-- 引入 Vue 3 -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <!-- 引入 Element Plus JS -->
+  <script src="https://unpkg.com/element-plus/dist/index.full.js"></script>
+  <script src="https://unpkg.com/element-plus/dist/locale/zh-cn.js"></script>
+  <!-- 引入 Icons -->
+  <script src="https://unpkg.com/@element-plus/icons-vue/dist/index.iife.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f0f2f5;
+      font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Arial, sans-serif;
+      font-size: 14px;
+      color: #333;
+    }
+    #app {
+      padding: 15px;
+    }
+    
+    /* 顶部标题区 */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background-color: #fff;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 4px rgba(0,21,41,.08);
+    }
+    .page-header .title {
+      font-size: 16px;
+      font-weight: bold;
+      color: #303133;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .page-header .title::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 16px;
+      background-color: #409eff;
+      border-radius: 2px;
+    }
+
+    /* Tab 页签样式 */
+    .custom-tabs {
+      background-color: #fff;
+      padding: 10px 20px 0;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 4px rgba(0,21,41,.08);
+    }
+    .custom-tabs .el-tabs__header {
+      margin: 0;
+    }
+    .custom-tabs .el-tabs__nav-wrap::after {
+      height: 1px;
+    }
+
+
+    /* 筛选区域 */
+    .filter-box {
+      background-color: #fff;
+      padding: 15px 20px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      box-shadow: 0 1px 4px rgba(0,21,41,.08);
+    }
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 10px;
+    }
+    .filter-row:last-child {
+      margin-bottom: 0;
+    }
+    .filter-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .filter-label {
+      color: #606266;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    /* 数据表格区域 */
+    .table-container {
+      background-color: #fff;
+      padding: 15px 20px;
+      border-radius: 4px;
+      box-shadow: 0 1px 4px rgba(0,21,41,.08);
+    }
+    
+    .el-table {
+      font-size: 14px;
+      --el-table-border-color: #ebeef5;
+      --el-table-header-bg-color: #f5f7fa;
+    }
+    .el-table .el-table__cell {
+      vertical-align: top !important;
+    }
+    .el-table .middle-align-col {
+      vertical-align: middle !important;
+    }
+    .el-table th.el-table__cell {
+      text-align: left !important;
+    }
+    .el-table .cell {
+      line-height: 1.6;
+      padding: 8px 12px;
+    }
+    
+    /* 左侧图片区域样式 (完全还原截图风格) */
+    .img-col-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .img-top-text {
+      color: #606266;
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+    .product-img {
+      width: 90px;
+      height: 90px;
+      border: 1px solid #ebeef5;
+      border-radius: 4px;
+      padding: 2px;
+      margin-bottom: 6px;
+    }
+    .status-tags {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      width: 80px;
+    }
+    .status-tag-orange {
+      background-color: #f59a23;
+      color: #fff;
+      border-radius: 2px;
+      padding: 2px 0;
+      font-size: 12px;
+    }
+    .status-tag-green {
+      background-color: #67c23a;
+      color: #fff;
+      border-radius: 2px;
+      padding: 2px 0;
+      font-size: 12px;
+    }
+    .status-tag-text {
+      color: #606266;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    /* 中间产品信息样式 */
+    .product-title-en {
+      color: #303133;
+      font-size: 14px;
+      margin-bottom: 4px;
+      line-height: 1.4;
+    }
+    .product-title-zh {
+      color: #303133;
+      font-size: 14px;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .info-item {
+      display: flex;
+      align-items: flex-start;
+      color: #606266;
+      white-space: nowrap;
+    }
+    .info-label {
+      color: #909399;
+      margin-right: 4px;
+    }
+    .info-value {
+      color: #303133;
+    }
+    .text-blue {
+      color: #409eff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .edit-icon {
+      color: #409eff;
+      margin-left: 4px;
+      cursor: pointer;
+    }
+
+    /* 右侧店铺/人员样式 */
+    .store-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      color: #303133;
+      margin-bottom: 8px;
+    }
+    .flag-icon {
+      width: 20px;
+      height: 14px;
+      background: url('https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg') no-resize center/cover;
+      display: inline-block;
+      border: 1px solid #eee;
+    }
+
+    /* 店铺选择器自定义样式 (兼容最新 Element Plus) */
+    .custom-store-select {
+      display: flex;
+      width: 220px;
+      height: 32px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      background-color: #fff;
+      transition: border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+      overflow: hidden;
+    }
+    .custom-store-select:hover {
+      border-color: #c0c4cc;
+    }
+    .custom-store-select:focus-within {
+      border-color: #409eff;
+    }
+    .borderless-select {
+      flex: 1;
+      width: 100%;
+    }
+    .borderless-select .el-input__wrapper,
+    .borderless-select .el-select__wrapper,
+    .borderless-select .el-select__wrapper.is-focus,
+    .borderless-select .el-input__wrapper.is-focus {
+      box-shadow: none !important;
+      background-color: transparent !important;
+      padding-right: 8px;
+    }
+    .custom-store-append {
+      width: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f5f7fa;
+      border-left: 1px solid #dcdfe6;
+      color: #909399;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .custom-store-append:hover {
+      color: #409eff;
+    }
+
+    /* 复合输入框样式 */
+    .composite-input {
+      --el-input-border-color: #dcdfe6;
+    }
+    .composite-input .el-input-group__prepend {
+      background-color: #fff;
+      padding: 0;
+    }
+    .composite-input .el-input-group__prepend .el-select {
+      margin: 0;
+    }
+    .composite-input .el-input-group__prepend .el-input__wrapper {
+      box-shadow: none !important;
+      background-color: transparent;
+    }
+    .composite-input .el-input-group__prepend .el-input__inner {
+      text-align: center;
+      color: #606266;
+    }
+    .composite-input .el-input-group__append {
+      background-color: #f5f7fa;
+      color: #909399;
+      padding: 0;
+      width: 32px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .composite-input .el-input-group__append:hover {
+      color: #409eff;
+    }
+
+    /* 操作日志弹窗样式 */
+    .log-dialog .el-dialog__header {
+      margin-right: 0;
+      padding: 15px 20px;
+      border-bottom: 1px solid #ebeef5;
+    }
+    .log-dialog .el-dialog__title {
+      font-size: 16px;
+      color: #303133;
+      font-weight: normal;
+    }
+    .log-dialog .el-dialog__headerbtn {
+      top: 15px;
+      right: 20px;
+    }
+    .log-dialog .el-dialog__body {
+      padding: 20px;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 头部 -->
+    <div class="page-header">
+      <div class="title">亚马逊FBA选品池</div>
+    </div>
+
+    <!-- Tab 页签 -->
+    <div class="custom-tabs">
+      <el-tabs v-model="activeTab" @tab-click="handleTabClick">
+        <el-tab-pane label="FBM机会产品" name="fbm"></el-tab-pane>
+        <el-tab-pane label="SKU机会产品" name="sku"></el-tab-pane>
+      </el-tabs>
+    </div>
+
+    <!-- FBM 视图 -->
+    <div v-show="activeTab === 'fbm'">
+      <!-- 搜索筛选区 -->
+      <div class="filter-box">
+      <div class="filter-row">
+        <div class="filter-item">
+          <el-input v-model="filters.searchValue" placeholder="请输入" clearable style="width: 250px;" class="composite-input">
+            <template #prepend>
+              <el-select v-model="filters.searchType" style="width: 85px;">
+                <el-option label="ASIN" value="asin"></el-option>
+                <el-option label="SKU" value="sku"></el-option>
+                <el-option label="MSKU" value="msku"></el-option>
+              </el-select>
+            </template>
+            <template #append>
+              <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 1024 1024" width="15" height="15"><path fill="currentColor" d="M128 256h768v85.333H128zM128 469.333h768v85.333H128zM128 682.667h768v85.333H128z"></path></svg>
+              </div>
+            </template>
+          </el-input>
+        </div>
+        <div class="filter-item">
+          <div class="custom-store-select">
+            <el-select v-model="filters.store" placeholder="全部店铺" clearable class="borderless-select">
+              <el-option label="Amazon-Z01008-US" value="Z01008"></el-option>
+            </el-select>
+            <div class="custom-store-append">
+              <svg viewBox="0 0 1024 1024" width="15" height="15"><path fill="currentColor" d="M128 256h768v85.333H128zM128 469.333h768v85.333H128zM128 682.667h768v85.333H128z"></path></svg>
+            </div>
+          </div>
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">审核状态</span>
+          <el-select v-model="filters.status" placeholder="请选择状态" clearable style="width: 120px;">
+            <el-option label="待审核" value="pending"></el-option>
+            <el-option label="审核通过" value="approved"></el-option>
+            <el-option label="不转FBA" value="rejected"></el-option>
+          </el-select>
+        </div>
+        <div class="filter-item">
+          <span class="filter-label">推荐类型</span>
+          <el-select v-model="filters.recommendationType" placeholder="请选择类型" multiple collapse-tags clearable style="width: 180px;">
+            <el-option label="亚马逊机会产品" value="amazon_opportunity"></el-option>
+            <el-option label="多平台机会产品" value="multiplatform_opportunity"></el-option>
+          </el-select>
+        </div>
+        <div class="filter-item">
+          <el-button type="primary" icon="Search">查询</el-button>
+          <el-button icon="RefreshRight">重置</el-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 数据表格 -->
+    <div class="table-container">
+      <div style="margin-bottom: 10px;">
+        <el-button type="primary" @click="showBatchAuditDialog">批量审核</el-button>
+      </div>
+      <el-table :data="tableData" border style="width: 100%" @selection-change="handleSelectionChange">
+        <!-- 勾选列 -->
+        <el-table-column type="selection" width="45" align="center"></el-table-column>
+        
+        <!-- 合并后的产品信息列 -->
+        <el-table-column label="产品信息" min-width="480">
+          <template #header>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              产品信息
+            </div>
+          </template>
+          <template #default="scope">
+            <div style="display: flex; gap: 15px;">
+              <!-- 左侧图片/状态 -->
+              <div class="img-col-container" style="flex-shrink: 0; width: 110px;">
+                <div class="img-top-text">{{ scope.row.listingType }}</div>
+                <img :src="scope.row.image" class="product-img" alt="产品图片" />
+                <el-tag v-if="scope.row.opportunityTag" type="success" size="small" style="margin-top: 4px; white-space: normal; height: auto; padding: 2px 4px; line-height: 1.2;">{{ scope.row.opportunityTag }}</el-tag>
+              </div>
+              
+              <!-- 右侧核心信息 -->
+              <div style="flex: 1; min-width: 0;">
+                <div class="product-title-en">
+                  {{ scope.row.titleEn }} <el-icon class="edit-icon"><EditPen /></el-icon>
+                </div>
+                <div class="product-title-zh">
+                  {{ scope.row.titleZh }}
+                </div>
+                <div class="info-list">
+                  <div class="info-item">
+                    <span class="info-label">系统SKU:</span>
+                    <span class="info-value">{{ scope.row.sku }}</span>
+                    <el-icon class="edit-icon"><EditPen /></el-icon>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">MSKU:</span>
+                    <span class="info-value">{{ scope.row.msku }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">ASIN:</span>
+                    <span class="text-blue">{{ scope.row.asin }}</span>
+                    <el-icon class="edit-icon" style="margin-left: 8px; font-size: 14px;"><DocumentCopy /></el-icon>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">品牌:</span>
+                    <span class="info-value">{{ scope.row.brand }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">FBA业务员:</span>
+                    <span class="info-value">{{ scope.row.fbaSalesman }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">FBA销售小组:</span>
+                    <span class="info-value">{{ scope.row.group }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- 产品属性列 -->
+        <el-table-column label="产品属性" min-width="220">
+          <template #header>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              产品属性
+            </div>
+          </template>
+          <template #default="scope">
+            <div class="info-list" style="gap: 5px;">
+              <div class="info-item">
+                <span class="info-label">物流属性:</span>
+                <span class="info-value">{{ scope.row.logisticsAttr }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">单个产品尺寸:</span>
+                <span class="info-value">{{ scope.row.productSize }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">毛重:</span>
+                <span class="info-value">{{ scope.row.grossWeight }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">体积重:</span>
+                <span class="info-value">{{ scope.row.volumeWeight }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">抛率:</span>
+                <span class="info-value">{{ scope.row.throwRate }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">产品标签:</span>
+                <span class="info-value">{{ scope.row.productTag }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">节日标签:</span>
+                <span class="info-value">{{ scope.row.holidayTag }}</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- LISTING信息列 -->
+        <el-table-column label="LISTING信息" min-width="280">
+          <template #header>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              LISTING信息
+            </div>
+          </template>
+          <template #default="scope">
+            <div class="info-list" style="gap: 5px;">
+              <div class="info-item">
+                <span class="info-label">来源渠道:</span>
+                <span class="info-value">{{ scope.row.sourceChannel }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">店铺状态:</span>
+                <span style="color: #67c23a;">{{ scope.row.storeStatus }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">开启备货:</span>
+                <span class="info-value">
+                  <svg v-if="scope.row.isStockEnabled" viewBox="0 0 1024 1024" width="24" height="24" style="vertical-align: middle;"><path fill="#409eff" d="M512 896C299.92 896 128 724.08 128 512S299.92 128 512 128s384 171.92 384 384-171.92 384-384 384z"></path><path fill="#ffffff" d="M455.2 697.6c-13.68 0-26.64-5.36-36.48-15.04l-143.2-140.8c-20.24-19.84-20.48-52.24-.64-72.48s52.24-20.48 72.48-.64l106.8 105.04 221.76-231.28c19.44-20.32 51.76-21.04 72.08-1.52 20.32 19.36 21.04 51.68 1.52 72L492.8 681.36c-9.68 10.16-23.04 16.24-37.6 16.24z"></path></svg>
+                  <svg v-else viewBox="0 0 1024 1024" width="24" height="24" style="vertical-align: middle;"><path fill="#f56c6c" d="M512 896C299.92 896 128 724.08 128 512S299.92 128 512 128s384 171.92 384 384-171.92 384-384 384z"></path><path fill="#ffffff" d="M685.2 338.8c18.72 18.72 18.72 49.12 0 67.84L579.84 512l105.36 105.36c18.72 18.72 18.72 49.12 0 67.84-18.72 18.72-49.12 18.72-67.84 0L512 579.84 406.64 685.2c-18.72 18.72-49.12 18.72-67.84 0-18.72-18.72-18.72-49.12 0-67.84L444.16 512 338.8 406.64c-18.72-18.72-18.72-49.12 0-67.84 18.72-18.72 49.12-18.72 67.84 0L512 444.16l105.36-105.36c18.72-18.72 49.12-18.72 67.84 0z"></path></svg>
+                </span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">星级:</span>
+                <span class="info-value">{{ scope.row.starRating }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">评论数:</span>
+                <span class="info-value">{{ scope.row.reviewCount }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">当前售价:</span>
+                <span class="info-value">{{ scope.row.currentPrice }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">您的价格:</span>
+                <span class="info-value">{{ scope.row.yourPrice }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">转FBA预估价格:</span>
+                <span class="info-value">{{ scope.row.fbaEstimatedPrice }}</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- 销量列 -->
+        <el-table-column label="销量" min-width="260" header-align="left">
+          <template #header>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              销量
+            </div>
+          </template>
+          <template #default="scope">
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: flex-start; gap: 40px; padding-left: 10px;">
+                <!-- 左侧亚马逊合计销量 -->
+                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                  <div style="color: #909399; margin-bottom: 8px; font-size: 14px;">亚马逊合计</div>
+                  <div style="display: grid; grid-template-columns: auto auto; gap: 6px 8px; align-items: center;">
+                    <span style="color: #606266; text-align: left;">7天:</span>
+                    <span :style="{ color: scope.row.amazonSales7d.color, fontWeight: 'bold', fontSize: '14px', textAlign: 'left' }">{{ scope.row.amazonSales7d.value }}</span>
+                    <span style="color: #606266; text-align: left;">14天:</span>
+                    <span :style="{ color: scope.row.amazonSales14d.color, fontWeight: 'bold', fontSize: '14px', textAlign: 'left' }">{{ scope.row.amazonSales14d.value }}</span>
+                    <span style="color: #606266; text-align: left;">30天:</span>
+                    <span :style="{ color: scope.row.amazonSales30d.color, fontWeight: 'bold', fontSize: '14px', textAlign: 'left' }">{{ scope.row.amazonSales30d.value }}</span>
+                  </div>
+                </div>
+                <!-- 右侧多平台合计销量 -->
+                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                  <div style="color: #909399; margin-bottom: 8px; font-size: 14px;">多平台合计</div>
+                  <div style="display: grid; grid-template-columns: auto auto; gap: 6px 8px; align-items: center;">
+                    <span style="color: #606266; text-align: left;">7天:</span>
+                    <span :style="{ color: scope.row.multiPlatformSales7d.color, fontWeight: 'bold', fontSize: '14px', textAlign: 'left' }">{{ scope.row.multiPlatformSales7d.value }}</span>
+                    <span style="color: #606266; text-align: left;">14天:</span>
+                    <span :style="{ color: scope.row.multiPlatformSales14d.color, fontWeight: 'bold', fontSize: '14px', textAlign: 'left' }">{{ scope.row.multiPlatformSales14d.value }}</span>
+                    <span style="color: #606266; text-align: left;">30天:</span>
+                    <span :style="{ color: scope.row.multiPlatformSales30d.color, fontWeight: 'bold', fontSize: '14px', textAlign: 'left' }">{{ scope.row.multiPlatformSales30d.value }}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px; padding-left: 10px;">
+                <div class="info-item">
+                  <span class="info-label">SKU近90天退款率:</span>
+                  <span class="info-value">{{ scope.row.skuRefundRate90d }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">SKU平均星级:</span>
+                  <span class="info-value">{{ scope.row.skuCompositeStarRating }}</span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- 转FBA信息列 -->
+        <el-table-column label="转FBA信息" min-width="220">
+          <template #header>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              转FBA信息
+            </div>
+          </template>
+          <template #default="scope">
+            <div class="info-list" style="gap: 5px;">
+              <div class="info-item">
+                <span class="info-label">FBA来源渠道:</span>
+                <span class="info-value">{{ scope.row.fbaSourceChannel }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">FBA渠道SKU:</span>
+                <span class="info-value">{{ scope.row.fbaChannelSku }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">审核状态:</span>
+                <span class="info-value" style="color: #f59a23; font-weight: bold;">{{ scope.row.auditStatus }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">审核人:</span>
+                <span class="info-value">{{ scope.row.auditor }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">审核时间:</span>
+                <span class="info-value">{{ scope.row.auditTime }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">添加时间:</span>
+                <span class="info-value">{{ scope.row.addTime }}</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- 备注列 -->
+        <el-table-column label="备注" min-width="150" align="center" class-name="middle-align-col">
+          <template #header>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+              备注
+            </div>
+          </template>
+          <template #default="scope">
+            <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+              <span style="color: #606266; white-space: pre-wrap; word-break: break-all; text-align: center;">{{ scope.row.fbaRemark }}</span>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- 操作列 -->
+        <el-table-column label="操作" width="120" align="center" fixed="right" class-name="middle-align-col">
+          <template #default="scope">
+            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; gap: 15px;">
+              <el-button v-if="scope.row.auditStatus !== '审核通过'" type="primary" size="small" style="width: 90px;" @click="showAuditDialog(scope.row)">审核</el-button>
+              <el-button size="small" style="width: 90px; margin-left: 0;" @click="showLogDialog(scope.row)">操作日志</el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+        <el-pagination
+          background
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="2"
+          :page-sizes="[20, 50, 100]">
+        </el-pagination>
+      </div>
+    </div>
+    </div> <!-- FBM 视图结束 -->
+
+    <!-- SKU 视图 -->
+    <div v-show="activeTab === 'sku'">
+      <div class="filter-box">
+        <div class="filter-row">
+          <div class="filter-item">
+            <el-input v-model="skuFilters.searchValue" placeholder="请输入" clearable style="width: 250px;" class="composite-input">
+              <template #prepend>
+                <el-select v-model="skuFilters.searchType" style="width: 85px;">
+                  <el-option label="SKU" value="sku"></el-option>
+                </el-select>
+              </template>
+              <template #append>
+              <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 1024 1024" width="15" height="15"><path fill="currentColor" d="M128 256h768v85.333H128zM128 469.333h768v85.333H128zM128 682.667h768v85.333H128z"></path></svg>
+              </div>
+              </template>
+            </el-input>
+          </div>
+          <div class="filter-item">
+            <span class="filter-label">分配状态</span>
+            <el-select v-model="skuFilters.status" placeholder="请选择状态" clearable style="width: 120px;">
+              <el-option label="待分配" value="pending"></el-option>
+              <el-option label="已分配" value="assigned"></el-option>
+            </el-select>
+          </div>
+          <div class="filter-item">
+            <span class="filter-label">推荐类型</span>
+            <el-select v-model="skuFilters.recommendationType" placeholder="请选择类型" multiple collapse-tags clearable style="width: 180px;">
+              <el-option label="亚马逊机会产品" value="amazon_opportunity"></el-option>
+              <el-option label="多平台机会产品" value="multiplatform_opportunity"></el-option>
+            </el-select>
+          </div>
+          <div class="filter-item">
+            <span class="filter-label">站点</span>
+            <el-select v-model="skuFilters.site" placeholder="请选择站点" multiple collapse-tags clearable style="width: 150px;">
+              <el-option label="美国" value="US"></el-option>
+              <el-option label="英国" value="UK"></el-option>
+              <el-option label="德国" value="DE"></el-option>
+              <el-option label="日本" value="JP"></el-option>
+            </el-select>
+          </div>
+          <div class="filter-item">
+            <el-button type="primary" icon="Search">查询</el-button>
+            <el-button icon="RefreshRight">重置</el-button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <div style="margin-bottom: 10px;">
+          <el-button type="primary" @click="showBatchAssignDialog">批量分配</el-button>
+        </div>
+        <el-table :data="skuTableData" border style="width: 100%" @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="45" align="center"></el-table-column>
+          
+          <el-table-column label="图片" width="120" align="center">
+            <template #default="scope">
+              <div class="img-col-container">
+                <div class="img-top-text">{{ scope.row.listingType }}</div>
+                <img :src="scope.row.image" class="product-img" alt="产品图片" />
+                <el-tag v-if="scope.row.opportunityTag" type="success" size="small" style="margin-top: 4px; white-space: normal; height: auto; padding: 2px 4px; line-height: 1.2;">{{ scope.row.opportunityTag }}</el-tag>
+              </div>
+            </template>
+          </el-table-column>
+
+          <el-table-column label="SKU产品信息" min-width="380">
+            <template #default="scope">
+              <div class="product-title-zh">{{ scope.row.titleZh }}</div>
+              <div class="info-list">
+                <div class="info-item">
+                  <span class="info-label">系统SKU:</span>
+                  <span class="info-value">{{ scope.row.sku }}</span>
+                  <el-icon class="edit-icon"><EditPen /></el-icon>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">品牌:</span>
+                  <span class="info-value">{{ scope.row.brand }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">站点:</span>
+                  <span class="info-value">{{ scope.row.site }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">开发类型:</span>
+                  <span class="info-value">{{ scope.row.developType }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">平台类目:</span>
+                  <span class="info-value">{{ scope.row.category }}</span>
+                </div>
+              </div>
+            </template>
+          </el-table-column>
+
+
+        <!-- 产品属性列 -->
+        <el-table-column label="产品属性" min-width="220">
+          <template #header>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              产品属性
+            </div>
+          </template>
+          <template #default="scope">
+            <div class="info-list" style="gap: 5px;">
+              <div class="info-item">
+                <span class="info-label">物流属性:</span>
+                <span class="info-value">{{ scope.row.logisticsAttr }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">单个产品尺寸:</span>
+                <span class="info-value">{{ scope.row.productSize }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">毛重:</span>
+                <span class="info-value">{{ scope.row.grossWeight }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">体积重:</span>
+                <span class="info-value">{{ scope.row.volumeWeight }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">抛率:</span>
+                <span class="info-value">{{ scope.row.throwRate }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">产品标签:</span>
+                <span class="info-value">{{ scope.row.productTag }}</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- 销量列 -->
+        <el-table-column label="销量" min-width="260" header-align="left">
+          <template #header>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              销量
+            </div>
+          </template>
+          <template #default="scope">
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; justify-content: flex-start; gap: 40px; padding-left: 10px;">
+                <!-- 左侧亚马逊合计销量 -->
+                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                  <div style="color: #909399; margin-bottom: 8px; font-size: 14px;">亚马逊合计</div>
+                  <div style="display: grid; grid-template-columns: auto auto; gap: 6px 8px; align-items: center;">
+                    <span style="color: #606266; text-align: left;">7天:</span>
+                    <span :style="{ color: scope.row.amazonSales7d.color, fontWeight: 'bold', fontSize: '14px', textAlign: 'left' }">{{ scope.row.amazonSales7d.value }}</span>
+                    <span style="color: #606266; text-align: left;">14天:</span>
+                    <span :style="{ color: scope.row.amazonSales14d.color, fontWeight: 'bold', fontSize: '14px', textAlign: 'left' }">{{ scope.row.amazonSales14d.value }}</span>
+                    <span style="color: #606266; text-align: left;">30天:</span>
+                    <span :style="{ color: scope.row.amazonSales30d.color, fontWeight: 'bold', fontSize: '14px', textAlign: 'left' }">{{ scope.row.amazonSales30d.value }}</span>
+                  </div>
+                </div>
+                <!-- 右侧多平台合计销量 -->
+                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                  <div style="color: #909399; margin-bottom: 8px; font-size: 14px;">多平台合计</div>
+                  <div style="display: grid; grid-template-columns: auto auto; gap: 6px 8px; align-items: center;">
+                    <span style="color: #606266; text-align: left;">7天:</span>
+                    <span :style="{ color: scope.row.multiPlatformSales7d.color, fontWeight: 'bold', fontSize: '14px', textAlign: 'left' }">{{ scope.row.multiPlatformSales7d.value }}</span>
+                    <span style="color: #606266; text-align: left;">14天:</span>
+                    <span :style="{ color: scope.row.multiPlatformSales14d.color, fontWeight: 'bold', fontSize: '14px', textAlign: 'left' }">{{ scope.row.multiPlatformSales14d.value }}</span>
+                    <span style="color: #606266; text-align: left;">30天:</span>
+                    <span :style="{ color: scope.row.multiPlatformSales30d.color, fontWeight: 'bold', fontSize: '14px', textAlign: 'left' }">{{ scope.row.multiPlatformSales30d.value }}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px; padding-left: 10px;">
+                <div class="info-item">
+                  <span class="info-label">SKU近90天退款率:</span>
+                  <span class="info-value">{{ scope.row.skuRefundRate90d }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">SKU平均星级:</span>
+                  <span class="info-value">{{ scope.row.skuCompositeStarRating }}</span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- 转FBA信息列 -->
+        <el-table-column label="转FBA信息" min-width="220">
+          <template #header>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              转FBA信息
+            </div>
+          </template>
+          <template #default="scope">
+            <div class="info-list" style="gap: 5px;">
+              <div class="info-item">
+                <span class="info-label">FBA销售小组:</span>
+                <span class="info-value">{{ scope.row.fbaGroup }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">FBA来源渠道:</span>
+                <span class="info-value">{{ scope.row.fbaSourceChannel }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">FBA渠道SKU:</span>
+                <span class="info-value">{{ scope.row.fbaChannelSku }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">分配状态:</span>
+                <span class="info-value" style="color: #f59a23; font-weight: bold;">{{ scope.row.assignStatus }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">分配人:</span>
+                <span class="info-value">{{ scope.row.assigner }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">分配时间:</span>
+                <span class="info-value">{{ scope.row.assignTime }}</span>
+              </div>
+              <div class="info-item">
+                <span class="info-label">添加时间:</span>
+                <span class="info-value">{{ scope.row.addTime }}</span>
+              </div>
+            </div>
+          </template>
+        </el-table-column>
+
+        <!-- 备注列 -->
+        <el-table-column label="备注" min-width="150" align="center" class-name="middle-align-col">
+          <template #header>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 4px;">
+              备注
+            </div>
+          </template>
+          <template #default="scope">
+            <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
+              <span style="color: #606266; white-space: pre-wrap; word-break: break-all; text-align: center;">{{ scope.row.fbaRemark }}</span>
+            </div>
+          </template>
+        </el-table-column>
+
+          <!-- 操作列 -->
+          <el-table-column label="操作" width="120" align="center" fixed="right" class-name="middle-align-col">
+            <template #default="scope">
+            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%; gap: 15px;">
+              <el-button v-if="scope.row.assignStatus === '待分配'" type="primary" size="small" style="width: 90px; margin-left: 0;">分配SKU</el-button>
+              <el-button v-if="scope.row.assignStatus !== '待分配'" type="success" size="small" style="width: 90px; margin-left: 0;">FBA刊登</el-button>
+              <el-button size="small" style="width: 90px; margin-left: 0;" @click="showLogDialog(scope.row)">操作日志</el-button>
+            </div>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+          <el-pagination
+            background
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="1"
+            :page-sizes="[20, 50, 100]">
+          </el-pagination>
+        </div>
+      </div>
+    </div> <!-- SKU视图结束 -->
+
+    <!-- 操作日志弹窗 -->
+    <el-dialog v-model="logDialogVisible" title="操作日志" width="800px" class="log-dialog">
+      <el-table :data="logData" border style="width: 100%">
+        <el-table-column prop="operateTime" label="操作时间" width="180" align="center"></el-table-column>
+        <el-table-column prop="operator" label="操作人" width="150" align="center"></el-table-column>
+        <el-table-column prop="content" label="操作内容" align="left"></el-table-column>
+      </el-table>
+      <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+        <el-pagination
+          background
+          layout="total, prev, pager, next, jumper"
+          :total="1"
+          :page-size="20"
+          v-model:current-page="logCurrentPage"
+        >
+        </el-pagination>
+      </div>
+    </el-dialog>
+
+    <!-- 审核弹窗 -->
+    <el-dialog v-model="auditDialogVisible" width="600px" class="log-dialog" destroy-on-close>
+      <template #header>
+        <span style="font-size: 18px; font-weight: normal; color: #303133;">审核</span>
+      </template>
+      <el-form :model="auditForm" label-width="100px" style="padding: 10px 20px 0 0;">
+        <el-form-item label="审核结果" required>
+          <el-radio-group v-model="auditForm.status">
+            <el-radio label="审核通过">审核通过</el-radio>
+            <el-radio label="审核不通过">审核不通过</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="来源渠道">
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <el-select v-model="auditForm.sourceChannel" style="width: 250px;">
+              <el-option label="Amazon-Z011235-US" value="Amazon-Z011235-US"></el-option>
+              <!-- 其它渠道可以在此添加 -->
+            </el-select>
+            <div style="display: flex; align-items: center; gap: 4px; cursor: pointer; user-select: none;" @click="auditForm.enableStock = !auditForm.enableStock">
+              <template v-if="auditForm.enableStock">
+                <svg viewBox="0 0 1024 1024" width="24" height="24" style="vertical-align: middle;"><path fill="#409eff" d="M512 896C299.92 896 128 724.08 128 512S299.92 128 512 128s384 171.92 384 384-171.92 384-384 384z"></path><path fill="#ffffff" d="M455.2 697.6c-13.68 0-26.64-5.36-36.48-15.04l-143.2-140.8c-20.24-19.84-20.48-52.24-.64-72.48s52.24-20.48 72.48-.64l106.8 105.04 221.76-231.28c19.44-20.32 51.76-21.04 72.08-1.52 20.32 19.36 21.04 51.68 1.52 72L492.8 681.36c-9.68 10.16-23.04 16.24-37.6 16.24z"></path></svg>
+                <span style="color: #606266;">开启备货</span>
+              </template>
+              <template v-else>
+                <svg viewBox="0 0 1024 1024" width="24" height="24" style="vertical-align: middle;"><path fill="#f56c6c" d="M512 896C299.92 896 128 724.08 128 512S299.92 128 512 128s384 171.92 384 384-171.92 384-384 384z"></path><path fill="#ffffff" d="M685.2 338.8c18.72 18.72 18.72 49.12 0 67.84L579.84 512l105.36 105.36c18.72 18.72 18.72 49.12 0 67.84-18.72 18.72-49.12 18.72-67.84 0L512 579.84 406.64 685.2c-18.72 18.72-49.12 18.72-67.84 0-18.72-18.72-18.72-49.12 0-67.84L444.16 512 338.8 406.64c-18.72-18.72-18.72-49.12 0-67.84 18.72-18.72 49.12-18.72 67.84 0L512 444.16l105.36-105.36c18.72-18.72 49.12-18.72 67.84 0z"></path></svg>
+                <span style="color: #606266;">限制备货</span>
+              </template>
+            </div>
+          </div>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input
+            v-model="auditForm.remark"
+            type="textarea"
+            :rows="6"
+            style="width: 100%;"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="auditDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="auditDialogVisible = false">提交</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 批量审核弹窗 -->
+    <el-dialog v-model="batchAuditDialogVisible" width="500px" class="log-dialog" destroy-on-close>
+      <template #header>
+        <span style="font-size: 18px; font-weight: normal; color: #303133;">批量审核</span>
+      </template>
+      <el-form :model="batchAuditForm" label-width="100px" style="padding: 10px 20px 0 0;">
+        <el-form-item label="审核结果" required>
+          <el-radio-group v-model="batchAuditForm.status">
+            <el-radio label="审核通过">审核通过</el-radio>
+            <el-radio label="审核不通过">审核不通过</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input
+            v-model="batchAuditForm.remark"
+            type="textarea"
+            :rows="6"
+            style="width: 100%;"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchAuditDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitBatchAudit">提交</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 批量分配弹窗 (SKU视图) -->
+    <el-dialog v-model="batchAssignDialogVisible" width="500px" class="log-dialog" destroy-on-close>
+      <template #header>
+        <span style="font-size: 18px; font-weight: normal; color: #303133;">批量分配</span>
+      </template>
+      <el-form :model="batchAssignForm" label-width="100px" style="padding: 10px 20px 0 0;">
+        <el-form-item label="分配给" required>
+          <el-select v-model="batchAssignForm.assignee" placeholder="请选择开发人员" style="width: 100%;">
+            <el-option label="张三" value="张三"></el-option>
+            <el-option label="李四" value="李四"></el-option>
+            <el-option label="王五" value="王五"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="备注">
+          <el-input
+            v-model="batchAssignForm.remark"
+            type="textarea"
+            :rows="6"
+            style="width: 100%;"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="batchAssignDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitBatchAssign">确认分配</el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+  </div>
+
+  <script>
+    const { createApp, ref, reactive } = Vue;
+    const app = createApp({
+      setup() {
+        const activeTab = ref('fbm'); // 默认选中 FBM机会产品
+        const handleTabClick = (tab, event) => {
+          console.log(tab.props.name);
+          // 可以在这里根据不同的 tab 加载不同的数据
+        };
+
+        const filters = reactive({
+          searchType: 'asin',
+          searchValue: '',
+          store: '',
+          status: 'pending',
+          recommendationType: []
+        });
+
+        const skuFilters = reactive({
+          searchType: 'sku',
+          searchValue: '',
+          status: 'pending',
+          recommendationType: [],
+          site: []
+        });
+
+        // 批量审核状态
+        const multipleSelection = ref([]);
+        const handleSelectionChange = (val) => {
+          multipleSelection.value = val;
+        };
+
+        const batchAuditDialogVisible = ref(false);
+        const batchAuditForm = reactive({
+          status: '审核通过',
+          remark: ''
+        });
+
+        const showBatchAuditDialog = () => {
+          if (multipleSelection.value.length === 0) {
+            ElementPlus.ElMessage.warning('请选择需要审核的数据');
+            return;
+          }
+          batchAuditForm.status = '审核通过';
+          batchAuditForm.remark = '';
+          batchAuditDialogVisible.value = true;
+        };
+
+        const submitBatchAudit = () => {
+          ElementPlus.ElMessage.success('批量审核提交成功');
+          batchAuditDialogVisible.value = false;
+        };
+
+        // 批量分配状态
+        const batchAssignDialogVisible = ref(false);
+        const batchAssignForm = reactive({
+          assignee: '',
+          remark: ''
+        });
+
+        const showBatchAssignDialog = () => {
+          if (multipleSelection.value.length === 0) {
+            ElementPlus.ElMessage.warning('请选择需要分配的数据');
+            return;
+          }
+          batchAssignForm.assignee = '';
+          batchAssignForm.remark = '';
+          batchAssignDialogVisible.value = true;
+        };
+
+        const submitBatchAssign = () => {
+          if (!batchAssignForm.assignee) {
+            ElementPlus.ElMessage.warning('请选择要分配给谁');
+            return;
+          }
+          ElementPlus.ElMessage.success('批量分配成功');
+          batchAssignDialogVisible.value = false;
+        };
+
+        // 审核弹窗相关状态
+        const auditDialogVisible = ref(false);
+        const auditForm = reactive({
+          status: '审核通过',
+          sourceChannel: 'Amazon-Z011235-US',
+          enableStock: true,
+          remark: ''
+        });
+
+        const showAuditDialog = (row) => {
+          auditForm.status = '审核通过';
+          auditForm.sourceChannel = row.sourceChannel || 'Amazon-Z011235-US';
+          auditForm.enableStock = row.isStockEnabled !== false;
+          auditForm.remark = '';
+          auditDialogVisible.value = true;
+        };
+
+        // 日志弹窗相关状态
+        const logDialogVisible = ref(false);
+        const logCurrentPage = ref(1);
+        const logData = ref([
+          {
+            operator: '待转模型自动审核',
+            operateTime: '2026/4/21 18:42:52',
+            content: '审核状态由【未审核】改为【审核通过】'
+          }
+        ]);
+
+        const showLogDialog = (row) => {
+          logDialogVisible.value = true;
+        };
+
+        const skuTableData = ref([
+          {
+            id: 1,
+            listingType: '自己拍照图',
+            image: 'https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png',
+            opportunityTag: '多平台机会产品',
+            titleZh: '黄铜公母貔貅风水摆件工艺全铜茶宠麒麟摆件飞天貔貅摆件 2pcs（公母貔貅【公】+公母...',
+            sku: '17558035',
+            brand: 'Generic',
+            site: '美国',
+            developType: '自主开发',
+            category: 'Home & Kitchen',
+            developer: '李四',
+            status: '待审核',
+
+            // 产品属性
+            logisticsAttr: '非仿牌',
+            productSize: '50 x 60 x 80 cm',
+            grossWeight: '850 g',
+            volumeWeight: '1200 g',
+            throwRate: '1.41',
+            productTag: '圣诞节，复活节',
+            holidayTag: '无',
+
+            // 销量
+            multiPlatformSales7d: { value: '84', color: '#67c23a', trend: 'up', trendColor: '#67c23a' },
+            multiPlatformSales14d: { value: '84', color: '#409eff', trend: '', trendColor: '' },
+            multiPlatformSales30d: { value: '84', color: '#f56c6c', trend: 'up', trendColor: '#67c23a' },
+            amazonSales7d: { value: '84', color: '#67c23a', trend: 'up', trendColor: '#67c23a' },
+            amazonSales14d: { value: '84', color: '#409eff', trend: '', trendColor: '' },
+            amazonSales30d: { value: '84', color: '#f56c6c', trend: 'up', trendColor: '#67c23a' },
+            skuRefundRate90d: '2.5%',
+            skuCompositeStarRating: '4.2',
+
+            // 转FBA信息
+            fbaGroup: '销售管理部',
+            fbaSourceChannel: 'Amazon-Z01008-US',
+            fbaChannelSku: 'US-Z01008-17558',
+            assignStatus: '待分配',
+            assigner: '-',
+            assignTime: '-',
+            addTime: '2023-09-26 14:30:00',
+            fbaRemark: '建议优先评估转运时效'
+          },
+          {
+            id: 2,
+            listingType: '供应商供图',
+            image: 'https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png',
+            opportunityTag: '亚马逊机会产品',
+            titleZh: '复古经典复古真皮笔记本手账素描本空白页带绳...',
+            sku: '18849021',
+            brand: 'Generic',
+            site: '英国',
+            developType: '按图开发',
+            category: 'Office Products',
+            developer: '王五',
+            status: '审核通过',
+
+            // 产品属性
+            logisticsAttr: '普货',
+            productSize: '30 x 40 x 50 cm',
+            grossWeight: '450 g',
+            volumeWeight: '300 g',
+            throwRate: '0.66',
+            productTag: '世界杯',
+
+            // 销量
+            multiPlatformSales7d: { value: '80', color: '#67c23a', trend: 'up', trendColor: '#67c23a' },
+            multiPlatformSales14d: { value: '150', color: '#409eff', trend: '', trendColor: '' },
+            multiPlatformSales30d: { value: '320', color: '#f56c6c', trend: 'down', trendColor: '#f56c6c' },
+            amazonSales7d: { value: '60', color: '#67c23a', trend: 'up', trendColor: '#67c23a' },
+            amazonSales14d: { value: '110', color: '#409eff', trend: '', trendColor: '' },
+            amazonSales30d: { value: '240', color: '#f56c6c', trend: 'down', trendColor: '#f56c6c' },
+            skuRefundRate90d: '1.2%',
+            skuCompositeStarRating: '4.5',
+
+            // 转FBA信息
+            fbaGroup: '销售二部',
+            fbaSourceChannel: 'Amazon-Z01008-UK',
+            fbaChannelSku: 'UK-Z01008-18849',
+            assignStatus: '已分配',
+            assigner: '李四',
+            assignTime: '2023-10-16 09:15:00',
+            addTime: '2023-10-15 11:20:00',
+            fbaRemark: '暂无异常'
+          }
+        ]);
+
+        const tableData = ref([
+          {
+            id: 1,
+            // 左侧图片/状态
+            listingType: '自己拍照图',
+            listingDate: '2023-09-26',
+            image: 'https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png',
+            isOutOfStock: true,
+            logisticsAttr: '非仿牌',
+            
+            // 中间产品信息
+            titleEn: '2Pcs Vintage Brass Kylin Statue Decorative Chinese Dragon Ornament Feng Shui Min...',
+            titleZh: '黄铜公母貔貅风水摆件工艺全铜茶宠麒麟摆件飞天貔貅摆件 2pcs（公母貔貅【公】+公母...',
+            sku: '17558035',
+            msku: 'LCS-5992X2520CWU04JU2',
+            fnsku: 'X004LAEW9L',
+            parentAsin: '',
+            asin: 'B0DYVG6W38',
+            brand: 'Generic',
+
+            // LISTING信息
+            store: 'Amazon-Z01008-US',
+            sourceChannel: 'Amazon-Z01008-US',
+            storeStatus: '正常',
+            isStockEnabled: true,
+            starRating: '4.5',
+            reviewCount: '128',
+            currentPrice: '$25.99',
+            yourPrice: '$23.99',
+            fbaEstimatedPrice: '$28.99',
+            group: '销售管理部',
+            salesPerson: '邓文佩',
+            primaryBusiness: '黄开璐',
+            listingMethod: '自动刊登',
+            fbaSalesman: '黄开璐',
+
+            // 产品属性
+            grossWeight: '850 g',
+            volumeWeight: '1200 g',
+            throwRate: '1.41',
+            productTag: '圣诞节，复活节',
+            holidayTag: '无',
+            opportunityTag: '亚马逊机会产品',
+            logisticsAttr: '普货',
+            productSize: '50 x 60 x 80 cm',
+
+            // 销量
+            multiPlatformSales7d: { value: '84', color: '#67c23a', trend: 'up', trendColor: '#67c23a' },
+            multiPlatformSales14d: { value: '84', color: '#409eff', trend: '', trendColor: '' },
+            multiPlatformSales30d: { value: '84', color: '#f56c6c', trend: 'up', trendColor: '#67c23a' },
+            amazonSales7d: { value: '84', color: '#67c23a', trend: 'up', trendColor: '#67c23a' },
+            amazonSales14d: { value: '84', color: '#409eff', trend: '', trendColor: '' },
+            amazonSales30d: { value: '84', color: '#f56c6c', trend: 'up', trendColor: '#67c23a' },
+            skuRefundRate90d: '2.5%',
+            skuCompositeStarRating: '4.2',
+
+            // 转FBA信息
+            fbaSourceChannel: 'Amazon-Z01008-US',
+            fbaChannelSku: 'US-Z01008-17558',
+            auditStatus: '待审核',
+            auditor: '-',
+            auditTime: '-',
+            addTime: '2023-09-26 14:30:00',
+            fbaRemark: '建议优先评估转运时效'
+          },
+          {
+            id: 2,
+            listingType: '供应商供图',
+            listingDate: '2023-10-15',
+            image: 'https://shadow.elemecdn.com/app/element/hamburger.9cf7b091-55e9-11e9-a976-7f4d0b07eef6.png',
+            isOutOfStock: false,
+            logisticsAttr: '普货',
+            
+            titleEn: 'Vintage Classic Retro Leather Notebook Journal Diary Sketchbook Blank String...',
+            titleZh: '复古经典复古真皮笔记本手账素描本空白页带绳...',
+            sku: '18849021',
+            msku: 'LCS-8842X1120CWU01JU5',
+            fnsku: '',
+            parentAsin: 'B0CXVF8W21',
+            asin: 'B0CXVF8W22',
+            brand: 'Generic',
+
+            store: 'Amazon-Z01008-US',
+            sourceChannel: 'Amazon-Z01008-US',
+            storeStatus: '正常',
+            isStockEnabled: false,
+            starRating: '4.8',
+            reviewCount: '256',
+            currentPrice: '$15.50',
+            yourPrice: '$15.00',
+            fbaEstimatedPrice: '$18.00',
+            group: '销售二部',
+            salesPerson: '张三',
+            primaryBusiness: '李四',
+            listingMethod: '手工刊登',
+            fbaSalesman: '李四',
+
+            // 产品属性
+            grossWeight: '450 g',
+            volumeWeight: '300 g',
+            throwRate: '0.66',
+            productTag: '世界杯',
+            holidayTag: '圣诞节',
+            opportunityTag: '多平台机会产品',
+            logisticsAttr: '普货',
+            productSize: '30 x 40 x 50 cm',
+
+            // 销量
+            multiPlatformSales7d: { value: '80', color: '#67c23a', trend: 'up', trendColor: '#67c23a' },
+            multiPlatformSales14d: { value: '150', color: '#409eff', trend: '', trendColor: '' },
+            multiPlatformSales30d: { value: '320', color: '#f56c6c', trend: 'down', trendColor: '#f56c6c' },
+            amazonSales7d: { value: '60', color: '#67c23a', trend: 'up', trendColor: '#67c23a' },
+            amazonSales14d: { value: '110', color: '#409eff', trend: '', trendColor: '' },
+            amazonSales30d: { value: '240', color: '#f56c6c', trend: 'down', trendColor: '#f56c6c' },
+            skuRefundRate90d: '1.2%',
+            skuCompositeStarRating: '4.5',
+
+            // 转FBA信息
+            fbaSourceChannel: 'Amazon-Z01008-UK',
+            fbaChannelSku: 'UK-Z01008-18849',
+            auditStatus: '审核通过',
+            auditor: '王五',
+            auditTime: '2023-10-16 09:15:00',
+            addTime: '2023-10-15 11:20:00',
+            fbaRemark: '暂无异常'
+          }
+        ]);
+
+        return { 
+          activeTab, handleTabClick, filters, tableData, skuFilters, skuTableData,
+          logDialogVisible, logCurrentPage, logData, showLogDialog,
+          auditDialogVisible, auditForm, showAuditDialog,
+          multipleSelection, handleSelectionChange, batchAuditDialogVisible, batchAuditForm, showBatchAuditDialog, submitBatchAudit,
+          batchAssignDialogVisible, batchAssignForm, showBatchAssignDialog, submitBatchAssign
+        };
+      }
+    });
+
+    // 注册 Element Plus 所有图标
+    for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+      app.component(key, component);
+    }
+    app.use(ElementPlus, { locale: ElementPlusLocaleZhCn });
+    app.mount('#app');
+  </script>
+</body>
+</html>
