@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>批量备货测算</title>
+<style>
+:root{--primary:#0d6efd;--primary-hover:#0b5ed7;--border:#dee2e6;--bg:#f5f7fb;--panel:#fff;--text:#212529;--muted:#6c757d;--header:#f8f9fa;--shadow:0 6px 18px rgba(33,37,41,.08)}
+*{box-sizing:border-box}body{margin:0;padding:28px;background:var(--bg);color:var(--text);font-family:"Microsoft YaHei","Segoe UI",Arial,sans-serif;font-size:14px}.page{max-width:1120px;margin:0 auto}.page-title{margin-bottom:16px;color:#1f2d3d;font-size:20px;font-weight:600}.card{overflow:hidden;background:var(--panel);border:1px solid var(--border);border-radius:6px;box-shadow:var(--shadow)}.card-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(#fff,var(--header));border-bottom:1px solid var(--border)}.card-header-title{display:flex;align-items:center;gap:8px;color:#1f2d3d;font-weight:600}.dot{width:8px;height:8px;border-radius:50%;background:var(--primary)}.card-body{padding:18px 18px 22px}.form-row{display:grid;grid-template-columns:110px 1fr 80px;gap:12px;align-items:start}.form-label{padding-top:9px;color:#343a40;font-weight:500;text-align:right}
+.batch-input{min-height:132px;width:100%;padding:10px 12px;border:1px solid #ced4da;border-radius:4px;background:#fff;color:var(--text);outline:none;resize:vertical;line-height:1.7;font-family:Consolas,"Microsoft YaHei",monospace;transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out}.batch-input:focus{border-color:#86b7fe;box-shadow:0 0 0 3px rgba(13,110,253,.18)}.btn{height:36px;min-width:68px;padding:0 14px;border:1px solid transparent;border-radius:4px;background:var(--primary);color:#fff;font-weight:500;cursor:pointer;transition:background .15s ease-in-out,border-color .15s ease-in-out}.btn:hover{background:var(--primary-hover);border-color:var(--primary-hover)}.btn-light{background:#fff;color:#495057;border-color:#ced4da}.btn-light:hover{background:#f8f9fa;color:#212529;border-color:#adb5bd}.help-text{margin:8px 0 16px 122px;color:var(--muted);line-height:1.7}.section-title{display:flex;align-items:center;gap:8px;margin:18px 0 8px;color:#1f2d3d;font-weight:600}.section-title:before{content:"";width:3px;height:14px;border-radius:2px;background:var(--primary)}.message-panel,.history-panel{padding:6px 14px;border:1px solid var(--border);border-radius:4px;background:#fff}.message-panel{min-height:198px}.empty{padding:66px 0;text-align:center;color:#adb5bd}.result-item,.history-item{padding:13px 0;border-bottom:1px solid #edf0f2;line-height:1.8}.result-item:last-child,.history-item:last-child{border-bottom:none}.item-title{display:flex;align-items:center;gap:8px;margin-bottom:4px;color:#212529;font-weight:600}.index{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#e7f1ff;color:var(--primary);font-size:12px;font-weight:600}.sub-line{margin-left:30px;color:#495057}.record-tag{display:inline-block;margin-top:2px;padding:2px 8px;border-radius:12px;background:#f1f3f5;color:#495057;font-size:12px}
+</style>
+</head>
+<body>
+<div class="page">
+    <div class="page-title">批量备货测算</div>
+    <div class="card">
+        <div class="card-header">
+            <div class="card-header-title"><span class="dot"></span>备货测算</div>
+            <button class="btn btn-light" onclick="clearInput()">清空输入</button>
+        </div>
+        <div class="card-body">
+            <div class="form-row">
+                <div class="form-label">Listing信息：</div>
+                <textarea class="batch-input" id="listingInput" placeholder="每行输入一条listing信息，来源渠道+渠道sku，用空格分隔，格式示例：Amazon-Z00001-US MTEST0001TEST">Amazon-Z01882-JP 5IF18224KFMG7717VR92KP
+Amazon-Z01921-US B0CN8P9Q6D
+Amazon-Z02136-UK B0D2H7YQ31
+Amazon-Z02658-DE B0BX9P21AA
+Amazon-Z03102-CA B0CWR8N7PM</textarea>
+                <button class="btn" onclick="runBatchQuery()">测算</button>
+            </div>
+            <div class="help-text">支持批量粘贴 Listing 信息，每行一条，最多50条。<br>如果已经加入购物车，建议删除购物车数据后再测算。</div>
+            <div class="section-title">测算结果</div>
+            <div class="message-panel" id="resultBox"></div>
+            <div class="section-title">上一次备货记录</div>
+            <div class="history-panel" id="lastRecord"></div>
+        </div>
+    </div>
+</div>
+<script>
+const reasonPool=[{reason:'独立账号断货二次备货：不备货原因：asin的到货时间为空',qty:0},{reason:'近30天销量稳定，库存覆盖天数低于安全库存线，建议进入备货流程',qty:18},{reason:'销量波动较大，存在活动或广告流量影响，建议运营确认后再备货',qty:8},{reason:'Listing资料不完整，缺少价格或到货时间，无法生成有效备货建议',qty:0},{reason:'当前可售库存不足，预计未来30天存在断货风险，建议补充安全库存',qty:11}];
+function parseListing(line){const parts=line.trim().split(/\s+/);return{channel:parts[0]||'-',sku:parts.slice(1).join(' ')||'-'};}
+function runBatchQuery(){
+ const input=document.getElementById('listingInput').value;
+ const lines=input.split(/\r?\n/).map(item=>item.trim()).filter(Boolean).slice(0,50);
+ const resultBox=document.getElementById('resultBox');
+ if(!lines.length){resultBox.innerHTML='<div class="empty">请先输入 Listing 信息</div>';document.getElementById('lastRecord').innerHTML='<div class="empty">暂无备货记录</div>';return;}
+ resultBox.innerHTML=lines.map((line,index)=>{const listing=parseListing(line);const result=reasonPool[index%reasonPool.length];return `<div class="result-item"><div class="item-title"><span class="index">${index+1}</span>${listing.channel} ${listing.sku}</div><div class="sub-line">测算原因：${result.reason}</div></div>`;}).join('');
+ renderBatchLastRecords(lines);
+}
+function renderBatchLastRecords(lines){
+ const rows=lines.map((line,index)=>{
+  const listing=parseListing(line);
+  const result=reasonPool[index%reasonPool.length];
+  const lastQty=result.qty>0?result.qty:(index%3===0?11:0);
+  const recordType=lastQty>0?'首次备货':'无备货记录';
+  const recordTime=lastQty>0?('2026-05-'+String(20-index).padStart(2,'0')+' 15:'+String(13+index).padStart(2,'0')+':15'):'-';
+  return '<div class="history-item"><div class="item-title"><span class="index">'+(index+1)+'</span>'+listing.channel+' '+listing.sku+'</div><div class="sub-line">上次备货时间：'+recordTime+'</div><div class="sub-line"><span class="record-tag">'+recordType+': 备货数量 '+lastQty+'</span></div></div>';
+ }).join('');
+ document.getElementById('lastRecord').innerHTML=rows;
+}
+function clearInput(){
+ document.getElementById('listingInput').value='';
+ document.getElementById('resultBox').innerHTML='<div class="empty">请先输入 Listing 信息</div>';
+ document.getElementById('lastRecord').innerHTML='<div class="empty">暂无备货记录</div>';
+}
+runBatchQuery();
+</script>
+</body>
+</html>
+<style>
+.pagination{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin:10px 0 0}.page-btn{height:30px;padding:0 12px;border:1px solid #ced4da;border-radius:4px;background:#fff;color:#495057;cursor:pointer}.page-btn:hover:not(:disabled){background:#f8f9fa;border-color:#adb5bd}.page-btn:disabled{color:#adb5bd;cursor:not-allowed;background:#f8f9fa}.page-info{color:#6c757d}
+</style>
+<script>
+let __pageLines=[];let __page=1;const __pageSize=10;
+function __ensurePager(){let pager=document.getElementById('paginationControls');const result=document.getElementById('resultBox');if(!pager&&result){pager=document.createElement('div');pager.id='paginationControls';pager.className='pagination';result.insertAdjacentElement('afterend',pager);}return pager;}
+function __renameTitle(){document.querySelectorAll('.section-title').forEach(el=>{if(el.textContent.indexOf('测算结果')>-1){el.textContent='测算结果';}});}
+function runBatchQuery(){__renameTitle();const input=document.getElementById('listingInput').value;__pageLines=input.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,50);__page=1;if(!__pageLines.length){document.getElementById('resultBox').innerHTML='';document.getElementById('lastRecord').innerHTML='';const p=__ensurePager();if(p)p.innerHTML='';return;}__renderPage();}
+function __renderPage(){const start=(__page-1)*__pageSize;const list=__pageLines.slice(start,start+__pageSize);document.getElementById('resultBox').innerHTML=list.map((line,i)=>{const idx=start+i;const listing=parseListing(line);const result=reasonPool[idx%reasonPool.length];return `<div class="result-item"><div class="item-title"><span class="index">${idx+1}</span>${listing.channel} ${listing.sku}</div><div class="sub-line">测算原因：${result.reason}</div></div>`;}).join('');__renderHistory(list,start);__renderPager();}
+function __renderHistory(list,start){const rows=list.map((line,i)=>{const idx=start+i;const listing=parseListing(line);const result=reasonPool[idx%reasonPool.length];const lastQty=result.qty>0?result.qty:(idx%3===0?11:0);const recordType=lastQty>0?'首次备货':'无备货记录';const recordTime=lastQty>0?('2026-05-'+String(20-idx).padStart(2,'0')+' 15:'+String(13+idx).padStart(2,'0')+':15'):'-';return '<div class="history-item"><div class="item-title"><span class="index">'+(idx+1)+'</span>'+listing.channel+' '+listing.sku+'</div><div class="sub-line">上次备货时间：'+recordTime+'</div><div class="sub-line"><span class="record-tag">'+recordType+': 备货数量 '+lastQty+'</span></div></div>';}).join('');document.getElementById('lastRecord').innerHTML=rows;}
+function __renderPager(){const total=Math.ceil(__pageLines.length/__pageSize);const box=__ensurePager();if(!box)return;if(total<=1){box.innerHTML='';return;}box.innerHTML=`<button class="page-btn" onclick="__changePage(-1)" ${__page===1?'disabled':''}>上一页</button><span class="page-info">第 ${__page} / ${total} 页</span><button class="page-btn" onclick="__changePage(1)" ${__page===total?'disabled':''}>下一页</button>`;}
+function __changePage(delta){const total=Math.ceil(__pageLines.length/__pageSize);__page=Math.min(Math.max(__page+delta,1),total);__renderPage();}
+__renameTitle();runBatchQuery();
+</script>
+<style>
+#lastRecord{display:none!important}
+#lastRecordTitle{display:none!important}
+</style>
+<script>
+function __hideHistorySection(){const h=document.getElementById('lastRecord');if(h){h.style.display='none';const prev=h.previousElementSibling;if(prev&&prev.classList.contains('section-title')){prev.id='lastRecordTitle';prev.style.display='none';}}}
+function __recordInfo(idx,result){const lastQty=result.qty>0?result.qty:(idx%3===0?11:0);const recordType=lastQty>0?'首次备货':'无备货记录';const recordTime=lastQty>0?('2026-05-'+String(20-idx).padStart(2,'0')+' 15:'+String(13+idx).padStart(2,'0')+':15'):'-';return '上次备货记录：'+recordTime+' 【'+recordType+':备货数量】 '+lastQty;}
+function __renderPage(){__hideHistorySection();const start=(__page-1)*__pageSize;const list=__pageLines.slice(start,start+__pageSize);document.getElementById('resultBox').innerHTML=list.map((line,i)=>{const idx=start+i;const listing=parseListing(line);const result=reasonPool[idx%reasonPool.length];return `<div class="result-item"><div class="item-title"><span class="index">${idx+1}</span>${listing.channel} ${listing.sku}</div><div class="sub-line">备货测算原因：${result.reason}</div><div class="sub-line">${__recordInfo(idx,result)}</div></div>`;}).join('');__renderPager();}
+function runBatchQuery(){__renameTitle();__hideHistorySection();const input=document.getElementById('listingInput').value;__pageLines=input.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,50);__page=1;if(!__pageLines.length){document.getElementById('resultBox').innerHTML='<div class="empty">请先输入 Listing 信息</div>';const p=__ensurePager();if(p)p.innerHTML='';return;}__renderPage();}
+__hideHistorySection();runBatchQuery();
+</script>
+<script>
+function __renderPager(){
+ const total=Math.max(Math.ceil(__pageLines.length/__pageSize),1);
+ const box=__ensurePager();
+ if(!box)return;
+ box.innerHTML=`<button class="page-btn" onclick="__changePage(-1)" ${__page===1?'disabled':''}>上一页</button><span class="page-info">第 ${__page} / ${total} 页，10条/页</span><button class="page-btn" onclick="__changePage(1)" ${__page===total?'disabled':''}>下一页</button>`;
+}
+__renderPager();
+</script>
+<script>
+function __recordInfo(idx,result){
+ const lastQty=result.qty>0?result.qty:(idx%3===0?11:0);
+ const recordType=lastQty>0?'首次备货':'无备货记录';
+ const recordTime=lastQty>0?('2026-05-'+String(20-idx).padStart(2,'0')+' 15:'+String(13+idx).padStart(2,'0')+':15'):'-';
+ return '上次备货记录：【'+recordType+':备货数量】 '+lastQty+' '+recordTime;
+}
+function __renderPage(){
+ __hideHistorySection();
+ const start=(__page-1)*__pageSize;
+ const list=__pageLines.slice(start,start+__pageSize);
+ document.getElementById('resultBox').innerHTML=list.map((line,i)=>{const idx=start+i;const listing=parseListing(line);const result=reasonPool[idx%reasonPool.length];return `<div class="result-item"><div class="item-title"><span class="index">${idx+1}</span>${listing.channel} ${listing.sku}</div><div class="sub-line">备货测算原因：${result.reason}</div><div class="sub-line">${__recordInfo(idx,result)}</div></div>`;}).join('');
+ __renderPager();
+}
+__renderPage();
+</script>
